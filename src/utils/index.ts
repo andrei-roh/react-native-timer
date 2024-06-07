@@ -1,2 +1,3 @@
 export { getFormatNumber } from './getFormatNumber';
-export { getRemainingTime } from './getRemainingTime';
+export { setRemainingTime } from './setRemainingTime';
+export { changeRemainingTime } from './changeRemainingTime';
