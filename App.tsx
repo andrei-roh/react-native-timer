@@ -1,23 +1,25 @@
 import React, { useEffect, useState } from 'react';
+import { Text, TouchableOpacity, View, Switch, TextInput } from 'react-native';
 import {
-  Dimensions,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { getRemainingTime } from './src/utils';
-
-const screen = Dimensions.get('window');
+  changeRemainingTime,
+  getFormatNumber,
+  setRemainingTime,
+} from './src/utils';
+import { ITime, Time } from './src/types';
+import { styles } from './src/style';
+import { COLORS, INITIAL_TIME } from './src/constants';
 
 function App(): React.JSX.Element {
-  const [remainingTime, setRemainingTime] = useState(0);
+  const [time, setTime] = useState<ITime>(INITIAL_TIME);
   const [isActive, setIsActive] = useState(false);
-  const { minutes, seconds } = getRemainingTime(remainingTime);
+  const [isCountdown, setIsCountdown] = useState(false);
 
   const handleToggle = () => setIsActive(!isActive);
   const handleReset = () => {
-    setRemainingTime(0);
+    setTime(currentValue => ({
+      ...currentValue,
+      ...INITIAL_TIME,
+    }));
     setIsActive(false);
   };
 
@@ -26,9 +28,17 @@ function App(): React.JSX.Element {
 
     if (isActive) {
       interval = setInterval(() => {
-        setRemainingTime(currentValue => currentValue + 1);
+        setTime(currentTime =>
+          changeRemainingTime(currentTime, isCountdown, handleReset),
+        );
       }, 1000);
-    } else if (!isActive && remainingTime !== 0 && interval) {
+    } else if (
+      !isActive &&
+      interval &&
+      (time[Time.Hours] !== 0 ||
+        time[Time.Minutes] !== 0 ||
+        time[Time.Seconds] !== 0)
+    ) {
       clearInterval(interval);
     }
 
@@ -37,62 +47,70 @@ function App(): React.JSX.Element {
         clearInterval(interval);
       }
     };
-  }, [isActive, remainingTime]);
+  }, [isActive, isCountdown, time]);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.timerText}>{`${minutes}:${seconds}`}</Text>
-      <TouchableOpacity onPress={handleToggle} style={styles.controlButton}>
-        <Text style={styles.controlButtonText}>
-          {isActive ? 'Pause' : 'Start'}
+      <TouchableOpacity style={styles.modeContainer}>
+        <Text style={styles.modeTitle}>
+          Mode: {!isCountdown ? 'Direct Counting' : 'Countdown'}
         </Text>
+        <Switch
+          value={isCountdown}
+          onChange={() => setIsCountdown(!isCountdown)}
+          trackColor={{ false: '#767577', true: COLORS.ORANGE }}
+          thumbColor={isCountdown ? COLORS.PURPLE : '#F4F3F4'}
+          ios_backgroundColor="#3E3E3E"
+          style={styles.switch}
+        />
       </TouchableOpacity>
-      <TouchableOpacity
-        onPress={handleReset}
-        style={[styles.controlButton, styles.resetButton]}>
-        <Text style={[styles.controlButtonText, styles.resetButtonText]}>
-          Reset
-        </Text>
+      <TouchableOpacity style={styles.timerContainer}>
+        <TextInput
+          style={styles.timerText}
+          value={getFormatNumber(time.hours)}
+          onChangeText={currentValue =>
+            setRemainingTime(currentValue, Time.Hours, setTime)
+          }
+          keyboardType="numeric"
+          readOnly={!isCountdown || isActive}
+        />
+        <Text style={styles.timerText}>:</Text>
+        <TextInput
+          style={styles.timerText}
+          value={getFormatNumber(time.minutes)}
+          onChangeText={currentValue =>
+            setRemainingTime(currentValue, Time.Minutes, setTime)
+          }
+          keyboardType="numeric"
+          readOnly={!isCountdown || isActive}
+        />
+        <Text style={styles.timerText}>:</Text>
+        <TextInput
+          style={styles.timerText}
+          value={getFormatNumber(time.seconds)}
+          onChangeText={currentValue =>
+            setRemainingTime(currentValue, Time.Seconds, setTime)
+          }
+          keyboardType="numeric"
+          readOnly={!isCountdown || isActive}
+        />
       </TouchableOpacity>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          onPress={handleToggle}
+          style={[styles.button, styles.startButton]}>
+          <Text style={[styles.buttonText, styles.startButtonText]}>
+            {isActive ? 'Pause' : 'Start'}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={handleReset}
+          style={[styles.button, styles.resetButton]}>
+          <Text style={[styles.buttonText, styles.resetButtonText]}>Reset</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  controlButton: {
-    borderWidth: 8,
-    borderColor: '#F09A36',
-    width: screen.width / 2.5,
-    height: screen.width / 2.5,
-    borderRadius: screen.width / 2.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  controlButtonText: {
-    fontSize: 45,
-    color: '#F09A36',
-  },
-  timerText: {
-    color: '#56526A',
-    fontSize: 90,
-    marginBottom: 20,
-  },
-  resetButton: {
-    marginTop: 20,
-    borderColor: '#56526A',
-    width: screen.width / 3.5,
-    height: screen.width / 3.5,
-  },
-  resetButtonText: {
-    color: '#56526A',
-    fontSize: 30,
-  },
-});
 
 export default App;
