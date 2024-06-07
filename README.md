@@ -1,3 +1,4 @@
 # iOS Build
-<img width="388" alt="image" src="https://github.com/andrei-roh/react-native-timer/assets/65450338/40e7299e-aaa3-436f-87c3-9e4a11dd8eac">
+<img width="370" alt="image" src="https://github.com/andrei-roh/react-native-timer/assets/65450338/0bc3c55e-6d22-4341-a362-a24031eaa345">
+
 
